@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,10 +8,10 @@ import '../inti/pemformat.dart';
 import '../model/catatan_kas.dart';
 import '../model/transaksi_penjualan.dart';
 import '../penyedia/penyedia_catatan_kas.dart';
-import '../penyedia/pengendali_shell.dart';
 import '../penyedia/penyedia_transaksi.dart';
 import '../widget/lembar_struk.dart';
 import '../widget/kartu_statistik.dart';
+import 'tampilan_riwayat.dart';
 
 enum _PeriodeLaporan { today, week, month, custom }
 
@@ -23,8 +23,6 @@ class TampilanLaporan extends StatefulWidget {
 }
 
 class _StatusTampilanLaporan extends State<TampilanLaporan> {
-  late final PengendaliShell _pengendali;
-
   _PeriodeLaporan _periode = _PeriodeLaporan.month;
   DateTimeRange? _rentangKhusus;
   _DataLaporan? _data;
@@ -34,23 +32,9 @@ class _StatusTampilanLaporan extends State<TampilanLaporan> {
   @override
   void initState() {
     super.initState();
-    _pengendali = context.read<PengendaliShell>();
-    _pengendali.addListener(_saatShellBerubah);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _muat();
     });
-  }
-
-  @override
-  void dispose() {
-    _pengendali.removeListener(_saatShellBerubah);
-    super.dispose();
-  }
-
-  void _saatShellBerubah() {
-    if (_pengendali.index == 3 && mounted) {
-      _muat();
-    }
   }
 
   DateTimeRange _rentang() {
@@ -145,45 +129,20 @@ class _StatusTampilanLaporan extends State<TampilanLaporan> {
     final data = _data;
     final rentang = _rentang();
 
-    return SafeArea(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Laporan'),
+        actions: [
+          IconButton(
+            tooltip: 'Muat ulang',
+            onPressed: _muat,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
+      body: SafeArea(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Laporan',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: WarnaAplikasi.ink,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        'Ringkasan penjualan, pemasukan, dan pengeluaran.',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: WarnaAplikasi.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Muat ulang',
-                  onPressed: _muat,
-                  icon: const Icon(Icons.refresh_rounded),
-                ),
-              ],
-            ),
-          ),
           SizedBox(
             height: 36,
             child: ListView(
@@ -348,7 +307,11 @@ class _StatusTampilanLaporan extends State<TampilanLaporan> {
                               ),
                             ),
                             TextButton(
-                              onPressed: () => _pengendali.go(2),
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const TampilanRiwayat(),
+                                ),
+                              ),
                               child: const Text('Lihat semua'),
                             ),
                           ],
@@ -388,7 +351,7 @@ class _StatusTampilanLaporan extends State<TampilanLaporan> {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 

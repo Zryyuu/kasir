@@ -43,7 +43,7 @@ class TemaAplikasi {
         foregroundColor: WarnaAplikasi.ink,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        centerTitle: false,
+        centerTitle: true,
         titleTextStyle: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w800,

@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../inti/tema_aplikasi.dart';
 import '../inti/pemformat.dart';
 import '../model/transaksi_penjualan.dart';
-import '../penyedia/pengendali_shell.dart';
 import '../penyedia/penyedia_transaksi.dart';
 import '../widget/keadaan_kosong.dart';
 import '../widget/lembar_struk.dart';
@@ -23,7 +22,6 @@ class TampilanRiwayat extends StatefulWidget {
 class _StatusTampilanRiwayat extends State<TampilanRiwayat> {
   final _pengendaliPencarian = TextEditingController();
   Timer? _penunda;
-  late final PengendaliShell _pengendali;
 
   _PeriodeRiwayat _periode = _PeriodeRiwayat.month;
   DateTimeRange? _rentangKhusus;
@@ -35,8 +33,6 @@ class _StatusTampilanRiwayat extends State<TampilanRiwayat> {
   @override
   void initState() {
     super.initState();
-    _pengendali = context.read<PengendaliShell>();
-    _pengendali.addListener(_saatShellBerubah);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _muat();
     });
@@ -45,15 +41,8 @@ class _StatusTampilanRiwayat extends State<TampilanRiwayat> {
   @override
   void dispose() {
     _penunda?.cancel();
-    _pengendali.removeListener(_saatShellBerubah);
     _pengendaliPencarian.dispose();
     super.dispose();
-  }
-
-  void _saatShellBerubah() {
-    if (_pengendali.index == 2 && mounted) {
-      _muat();
-    }
   }
 
   DateTimeRange _rentang() {
@@ -149,45 +138,20 @@ class _StatusTampilanRiwayat extends State<TampilanRiwayat> {
       (sum, transaksi) => sum + transaksi.total,
     );
 
-    return SafeArea(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Riwayat Transaksi'),
+        actions: [
+          IconButton(
+            tooltip: 'Muat ulang',
+            onPressed: _muat,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
+      body: SafeArea(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Riwayat Transaksi',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: WarnaAplikasi.ink,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        'Semua penjualan tersimpan di perangkat ini.',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: WarnaAplikasi.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Muat ulang',
-                  onPressed: _muat,
-                  icon: const Icon(Icons.refresh_rounded),
-                ),
-              ],
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
             child: TextField(
@@ -345,7 +309,7 @@ class _StatusTampilanRiwayat extends State<TampilanRiwayat> {
             ),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -405,7 +369,7 @@ class _UbinRiwayat extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${Tanggal.lengkap(transaksi.dibuatPada)} Â· '
+                      '${Tanggal.lengkap(transaksi.dibuatPada)} · '
                       '${transaksi.metodePembayaran}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -416,7 +380,7 @@ class _UbinRiwayat extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${transaksi.jumlahItem} varian Â· '
+                      '${transaksi.jumlahItem} varian · '
                       '${transaksi.totalJumlah} porsi',
                       style: const TextStyle(
                         fontSize: 10,

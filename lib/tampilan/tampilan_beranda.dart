@@ -356,7 +356,7 @@ class _KartuHariIni extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '$jumlahTransaksi transaksi Â· $jumlah porsi terjual',
+                  '$jumlahTransaksi transaksi · $jumlah porsi terjual',
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -471,8 +471,8 @@ class _UbinTransaksi extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${Tanggal.waktu(transaksi.dibuatPada)} Â· '
-                      '${transaksi.metodePembayaran} Â· '
+                      '${Tanggal.waktu(transaksi.dibuatPada)} · '
+                      '${transaksi.metodePembayaran} · '
                       '${transaksi.totalJumlah} porsi',
                       style: const TextStyle(
                         fontSize: 10.5,

@@ -223,7 +223,7 @@ class _StatusTampilanKasir extends State<TampilanKasir> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '${keranjang.totalJumlah} item â€¢ ${Uang.format(keranjang.total)}',
+                          '${keranjang.totalJumlah} item · ${Uang.format(keranjang.total)}',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,

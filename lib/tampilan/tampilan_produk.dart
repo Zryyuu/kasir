@@ -114,14 +114,6 @@ class _StatusTampilanProduk extends State<TampilanProduk> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Produk / Varian'),
-        actions: [
-          IconButton(
-            tooltip: 'Tambah produk',
-            onPressed: () => _bukaForm(),
-            icon: const Icon(Icons.add_rounded),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: Column(
         children: [
@@ -270,7 +262,7 @@ class _UbinProduk extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${Uang.format(produk.harga)}  â€¢  Stok ${produk.stok} porsi',
+                        '${Uang.format(produk.harga)} · Stok ${produk.stok} porsi',
                         style: TextStyle(
                           fontSize: 11.5,
                           color: statusColor,
