@@ -43,6 +43,7 @@ dependencies:
   # Local offline database
   sqflite: ^2.4.2
   sqflite_common_ffi: ^2.3.6
+  sqflite_common_ffi_web: ^1.1.1
   path: ^1.9.1
 
   # Indonesian currency & date formatting

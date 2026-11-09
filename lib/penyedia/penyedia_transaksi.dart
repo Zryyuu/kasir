@@ -48,33 +48,39 @@ class PenyediaTransaksi extends ChangeNotifier {
   Future<void> muatTerbaru({int limit = 50}) async {
     _memuat = true;
     notifyListeners();
+    try {
+      final db = await _basisData.database;
+      final rows = await db.query(
+        BasisData.tTransaksi,
+        orderBy: 'dibuat_pada DESC',
+        limit: limit,
+      );
+      final itemPerTransaksi = await _itemUntuk(
+        db,
+        rows.map((row) => row['id'] as int).toList(),
+      );
+      final namaKasir = await _namaKasirUntuk(db, rows);
+      _terbaru = rows
+          .map((row) {
+            final idKasir = (row['id_pengguna'] as num?)?.toInt();
+            return TransaksiPenjualan.dariPeta(
+              row,
+              items: itemPerTransaksi[row['id'] as int] ?? const [],
+              namaKasir: idKasir == null ? null : namaKasir[idKasir],
+            );
+          })
+          .toList();
 
-    final db = await _basisData.database;
-    final rows = await db.query(
-      BasisData.tTransaksi,
-      orderBy: 'dibuat_pada DESC',
-      limit: limit,
-    );
-    final itemPerTransaksi = await _itemUntuk(
-      db,
-      rows.map((row) => row['id'] as int).toList(),
-    );
-    final namaKasir = await _namaKasirUntuk(db, rows);
-    _terbaru = rows
-        .map((row) {
-          final idKasir = (row['id_pengguna'] as num?)?.toInt();
-          return TransaksiPenjualan.dariPeta(
-            row,
-            items: itemPerTransaksi[row['id'] as int] ?? const [],
-            namaKasir: idKasir == null ? null : namaKasir[idKasir],
-          );
-        })
-        .toList();
-
-    final sekarang = DateTime.now();
-    _ringkasanHariIni = await ringkasanUntuk(sekarang, sekarang);
-    _memuat = false;
-    notifyListeners();
+      final sekarang = DateTime.now();
+      _ringkasanHariIni = await ringkasanUntuk(sekarang, sekarang);
+    } catch (e) {
+      debugPrint('Gagal memuat transaksi: $e');
+      _terbaru = [];
+      _ringkasanHariIni = const RingkasanPenjualan();
+    } finally {
+      _memuat = false;
+      notifyListeners();
+    }
   }
 
   Future<RingkasanPenjualan> ringkasanUntuk(

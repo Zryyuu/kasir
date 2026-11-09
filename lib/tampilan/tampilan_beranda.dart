@@ -10,14 +10,17 @@ import '../penyedia/penyedia_catatan_kas.dart';
 import '../penyedia/penyedia_keranjang.dart';
 import '../penyedia/penyedia_katalog.dart';
 import '../penyedia/penyedia_pengaturan.dart';
-import '../penyedia/pengendali_shell.dart';
 import '../penyedia/penyedia_transaksi.dart';
 import '../widget/keadaan_kosong.dart';
 import '../widget/tombol_aksi_cepat.dart';
 import '../widget/lembar_struk.dart';
 import '../widget/judul_bagian.dart';
 import '../widget/lembar_pengaturan.dart';
+import 'tampilan_kasir.dart';
+import 'tampilan_keuangan.dart';
+import 'tampilan_laporan.dart';
 import 'tampilan_produk.dart';
+import 'tampilan_riwayat.dart';
 
 class TampilanBeranda extends StatelessWidget {
   const TampilanBeranda({super.key});
@@ -37,13 +40,16 @@ class TampilanBeranda extends StatelessWidget {
     final kas = context.watch<PenyediaCatatanKas>();
     final auth = context.watch<PenyediaAuth>();
     final adalahAdmin = auth.adalahAdmin;
-    final shell = context.read<PengendaliShell>();
 
     final penjualan = daftarTransaksi.ringkasanHariIni.penjualan;
     final manualIncome = kas.totalHariIni(JenisCatatanKas.pemasukan);
     final pengeluaran = kas.totalHariIni(JenisCatatanKas.pengeluaran);
     final net = penjualan + manualIncome - pengeluaran;
     final terbaru = daftarTransaksi.terbaru.take(5).toList();
+
+    void buka(Widget layar) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => layar));
+    }
 
     return SafeArea(
       child: RefreshIndicator(
@@ -112,7 +118,6 @@ class TampilanBeranda extends StatelessWidget {
                     tooltip: 'Keluar',
                     onPressed: () {
                       context.read<PenyediaKeranjang>().clear();
-                      shell.reset();
                       context.read<PenyediaAuth>().keluar();
                     },
                     icon: const Icon(
@@ -161,33 +166,31 @@ class TampilanBeranda extends StatelessWidget {
                       icon: Icons.point_of_sale_rounded,
                       label: 'Kasir',
                       color: WarnaAplikasi.primary,
-                      onTap: () => shell.go(1),
+                      onTap: () => buka(const TampilanKasir()),
                     ),
                     TombolAksiCepat(
                       icon: Icons.inventory_2_rounded,
                       label: 'Produk',
                       color: const Color(0xFF6366F1),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const TampilanProduk()),
-                      ),
+                      onTap: () => buka(const TampilanProduk()),
                     ),
                     TombolAksiCepat(
                       icon: Icons.receipt_long_rounded,
                       label: 'Riwayat',
                       color: WarnaAplikasi.info,
-                      onTap: () => shell.go(2),
+                      onTap: () => buka(const TampilanRiwayat()),
                     ),
                     TombolAksiCepat(
                       icon: Icons.account_balance_wallet_rounded,
                       label: 'Keuangan',
                       color: WarnaAplikasi.primary,
-                      onTap: () => shell.go(4),
+                      onTap: () => buka(const TampilanKeuangan()),
                     ),
                     TombolAksiCepat(
                       icon: Icons.bar_chart_rounded,
                       label: 'Laporan',
                       color: WarnaAplikasi.accent,
-                      onTap: () => shell.go(3),
+                      onTap: () => buka(const TampilanLaporan()),
                     ),
                   ],
                 ),
@@ -199,14 +202,14 @@ class TampilanBeranda extends StatelessWidget {
                   icon: Icons.point_of_sale_rounded,
                   label: 'Buka Kasir',
                   color: WarnaAplikasi.primary,
-                  onTap: () => shell.go(1),
+                  onTap: () => buka(const TampilanKasir()),
                 ),
               ),
             const SizedBox(height: 24),
             JudulBagian(
               title: 'Transaksi Terakhir',
               actionLabel: adalahAdmin ? 'Lihat semua' : null,
-              onAction: adalahAdmin ? () => shell.go(2) : null,
+              onAction: adalahAdmin ? () => buka(const TampilanRiwayat()) : null,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),

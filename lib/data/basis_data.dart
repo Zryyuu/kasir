@@ -1,30 +1,53 @@
-﻿import 'dart:io';
-
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import '../inti/keamanan.dart';
 
 /// Lapisan basis data lokal (SQLite).
-///
-/// Semua data disimpan di perangkat. Penjualan, detail item, dan pengurangan
-/// stok ditulis dalam satu transaksi basis data agar tidak ada data setengah jadi.
 class BasisData {
   BasisData._();
 
   static final BasisData instance = BasisData._();
 
   static bool _ffiSiap = false;
+  static DatabaseFactory? _pabrikData;
 
-  static void _pastikanFfi() {
+  /// Inisialisasi backend database (panggil sekali sebelum akses database).
+  static Future<void> siapkan() async {
+    await _pastikanSiap();
+  }
+
+  static Future<void> _pastikanSiap() async {
     if (_ffiSiap) return;
-    if (!kIsWeb &&
-        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
+    if (kIsWeb) {
+      try {
+        _pabrikData = databaseFactoryFfiWeb;
+        databaseFactory = databaseFactoryFfiWeb;
+      } catch (_) {
+        _pabrikData = databaseFactoryFfiWebNoWebWorker;
+        databaseFactory = databaseFactoryFfiWebNoWebWorker;
+      }
+    } else {
+      switch (defaultTargetPlatform) {
+        case TargetPlatform.windows:
+        case TargetPlatform.linux:
+        case TargetPlatform.macOS:
+          sqfliteFfiInit();
+          _pabrikData = databaseFactoryFfi;
+          databaseFactory = databaseFactoryFfi;
+          break;
+        default:
+          _pabrikData = databaseFactory;
+      }
     }
     _ffiSiap = true;
+  }
+
+  static Future<DatabaseFactory> _pabrik() async {
+    await _pastikanSiap();
+    return _pabrikData ?? databaseFactory;
   }
 
   static const int _versi = 8;
@@ -57,30 +80,61 @@ class BasisData {
   }
 
   Future<Database> _buka() async {
-    _pastikanFfi();
-    final dir = await getDatabasesPath();
-    final path = p.join(dir, _namaBerkas);
-    return openDatabase(
-      path,
-      version: _versi,
-      onConfigure: (db) async {
-        await db.execute('PRAGMA foreign_keys = ON');
-        await db.rawQuery('PRAGMA journal_mode = WAL');
-        await db.rawQuery('PRAGMA synchronous = FULL');
-      },
-      onCreate: (db, version) async {
-        await _buatSkema(db);
-        await _isiProdukAwal(db);
-        await _isiPenggunaAwal(db);
-      },
-      onUpgrade: (db, versiLama, versiBaru) async {
-        if (versiLama < 8) {
-          await _migrasiKeIndonesia(db);
-        } else {
-          await _migrasiPin(db);
-        }
-      },
-    );
+    final pabrik = await _pabrik();
+    final dir = await pabrik.getDatabasesPath();
+    final path = kIsWeb ? _namaBerkas : p.join(dir, _namaBerkas);
+    try {
+      return await pabrik.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: _versi,
+          onConfigure: (db) async {
+            await db.execute('PRAGMA foreign_keys = ON');
+            if (!kIsWeb) {
+              await db.rawQuery('PRAGMA journal_mode = WAL');
+              await db.rawQuery('PRAGMA synchronous = FULL');
+            }
+          },
+          onCreate: (db, version) async {
+            await _buatSkema(db);
+            await _isiProdukAwal(db);
+            await _isiPenggunaAwal(db);
+          },
+          onUpgrade: (db, versiLama, versiBaru) async {
+            if (versiLama < 8) {
+              await _migrasiKeIndonesia(db);
+            } else {
+              await _migrasiPin(db);
+            }
+          },
+        ),
+      );
+    } catch (e) {
+      if (kIsWeb && !identical(pabrik, databaseFactoryFfiWebNoWebWorker)) {
+        final cadangan = databaseFactoryFfiWebNoWebWorker;
+        _pabrikData = cadangan;
+        databaseFactory = cadangan;
+        return cadangan.openDatabase(
+          path,
+          options: OpenDatabaseOptions(
+            version: _versi,
+            onCreate: (db, version) async {
+              await _buatSkema(db);
+              await _isiProdukAwal(db);
+              await _isiPenggunaAwal(db);
+            },
+            onUpgrade: (db, versiLama, versiBaru) async {
+              if (versiLama < 8) {
+                await _migrasiKeIndonesia(db);
+              } else {
+                await _migrasiPin(db);
+              }
+            },
+          ),
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<void> _buatSkema(DatabaseExecutor db) async {
@@ -282,7 +336,6 @@ class BasisData {
         ''');
       }
 
-      // Hapus tabel lama (urutan aman untuk FK)
       for (final t in [
         'sale_item_modifiers',
         'sale_items',

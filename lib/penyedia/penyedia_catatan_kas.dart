@@ -17,11 +17,17 @@ class PenyediaCatatanKas extends ChangeNotifier {
   Future<void> load() async {
     _memuat = true;
     notifyListeners();
-    final db = await _basisData.database;
-    final rows = await db.query(BasisData.tCatatanKas, orderBy: 'dibuat_pada DESC');
-    _daftarCatatan = rows.map(CatatanKas.dariPeta).toList();
-    _memuat = false;
-    notifyListeners();
+    try {
+      final db = await _basisData.database;
+      final rows = await db.query(BasisData.tCatatanKas, orderBy: 'dibuat_pada DESC');
+      _daftarCatatan = rows.map(CatatanKas.dariPeta).toList();
+    } catch (e) {
+      debugPrint('Gagal memuat catatan kas: $e');
+      _daftarCatatan = [];
+    } finally {
+      _memuat = false;
+      notifyListeners();
+    }
   }
 
   Future<void> tambah({

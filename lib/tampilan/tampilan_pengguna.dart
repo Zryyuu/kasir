@@ -124,7 +124,7 @@ class _StatusTampilanPengguna extends State<TampilanPengguna> {
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                       itemCount: _daftarPengguna.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (konteks, indeks) => const SizedBox(height: 8),
                       itemBuilder: (context, i) {
                         final p = _daftarPengguna[i];
                         return _UbinPengguna(

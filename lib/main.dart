@@ -18,6 +18,7 @@ import 'tampilan/tampilan_utama.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await BasisData.siapkan();
   await initializeDateFormatting('id_ID');
   runApp(const AplikasiSinarKasir());
 }

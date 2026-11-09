@@ -26,14 +26,20 @@ class PenyediaKatalog extends ChangeNotifier {
   Future<void> load() async {
     _memuat = true;
     notifyListeners();
-    final db = await _basisData.database;
-    final rows = await db.query(
-      BasisData.tProduk,
-      orderBy: 'aktif DESC, nama COLLATE NOCASE ASC',
-    );
-    _daftarProduk = rows.map(Produk.dariPeta).toList();
-    _memuat = false;
-    notifyListeners();
+    try {
+      final db = await _basisData.database;
+      final rows = await db.query(
+        BasisData.tProduk,
+        orderBy: 'aktif DESC, nama COLLATE NOCASE ASC',
+      );
+      _daftarProduk = rows.map(Produk.dariPeta).toList();
+    } catch (e) {
+      debugPrint('Gagal memuat katalog: $e');
+      _daftarProduk = [];
+    } finally {
+      _memuat = false;
+      notifyListeners();
+    }
   }
 
   Future<void> tambahProduk({

@@ -19,10 +19,16 @@ class PenyediaTambahan extends ChangeNotifier {
   Future<void> load() async {
     _memuat = true;
     notifyListeners();
-    final db = await _basisData.database;
-    final rows = await db.query(BasisData.tTambahan, orderBy: 'id ASC');
-    _daftarTambahan = rows.map(Tambahan.dariPeta).toList();
-    _memuat = false;
-    notifyListeners();
+    try {
+      final db = await _basisData.database;
+      final rows = await db.query(BasisData.tTambahan, orderBy: 'id ASC');
+      _daftarTambahan = rows.map(Tambahan.dariPeta).toList();
+    } catch (e) {
+      debugPrint('Gagal memuat tambahan: $e');
+      _daftarTambahan = [];
+    } finally {
+      _memuat = false;
+      notifyListeners();
+    }
   }
 }
